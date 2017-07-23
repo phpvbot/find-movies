@@ -64,13 +64,17 @@ class FindMovies extends AbstractMessageHandler
 
     public static function render($movies)
     {
-        $count = count($movies);
-        $str = '为您找到以下 ' . $count . ' 部电影' . PHP_EOL;
+        $count = count($movies) - 1;
+        $str = '为您找到以下 ' . ($count + 1) . ' 部电影' . PHP_EOL;
         foreach ($movies as $key => $movie) {
             $str .= ($key + 1) . ' ' . $movie['title'] . PHP_EOL;
             $str .= '  下载列表: ' . PHP_EOL;
-            foreach ($movie['downloads'] as $download) {
-                $str .= '  《' . $download['title'] . '》 ' . $download['url'] . PHP_EOL;
+            $downloadCount = count($movie['downloads']) - 1;
+            foreach ($movie['downloads'] as $i => $download) {
+                $str .= '  《' . $download['title'] . '》 ' . $download['url'];
+                if ($i < $downloadCount) {
+                    $str .= PHP_EOL;
+                }
             }
             if ($key < $count) {
                 $str .= PHP_EOL;
