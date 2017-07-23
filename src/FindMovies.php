@@ -3,6 +3,7 @@
 namespace Vbot\FindMovies;
 
 use Hanson\Vbot\Extension\AbstractMessageHandler;
+use Hanson\Vbot\Message\Text;
 use Illuminate\Support\Collection;
 use Qbhy\FindMovies\Finder;
 
@@ -17,7 +18,12 @@ class FindMovies extends AbstractMessageHandler
 
     public $version = '1.0';
 
-    public $configs = [];
+    public $config = [
+        'limit' => 3,
+        'msg' => '抱歉,没有找到和 "{keyword}" 相关的电影。',
+        'render' => [self::class, 'render']
+    ];
+
 
     /**
      * 注册拓展时的操作.
@@ -28,7 +34,7 @@ class FindMovies extends AbstractMessageHandler
          * 初始化 Finder
          */
         Finder::init();
-        $this->configs = vbot('config')->get('extension.' . $this->name);
+        $this->config = vbot()->config->get('extension.' . $this->name, $this->config);
     }
 
     /**
@@ -36,16 +42,39 @@ class FindMovies extends AbstractMessageHandler
      *
      * @param Collection $message
      * @return mixed
+     * @throws \Exception
      */
     public function handler(Collection $message)
     {
         $content = $message['content'];
         if ($message['type'] === 'text' and strpos($content, '找电影 ') === 0 and strlen($content) > 4) {
-            $keyword = str_replace("找电影 ", '', $content);
-            $limit = isset($this->configs['limit']) ? $this->configs['limit'] : 5;
-            $results = Finder::find($keyword, $limit);
-
+            $keyword = str_replace('找电影 ', '', $content);
+            $movies = Finder::find($keyword, $this->config['limit']);
+            $username = $message['from']['UserName'];
+            if (count($movies) === 0) {
+                return Text::send($username, str_replace("{keyword}", $keyword, $this->config['msg']));
+            }
+            if (is_callable($render = $this->config['render'])) {
+                $str = call_user_func_array($render, [$movies]);
+            } else {
+                $str = self::render($movies);
+            }
+            return Text::send($username, $str);
         }
         return null;
+    }
+
+    public static function render($movies)
+    {
+        $str = '为您找到以下 ' . count($movies) . ' 部电影' . PHP_EOL;
+        foreach ($movies as $key => $movie) {
+            $str .= ($key + 1) . ' ' . $movie['title'] . PHP_EOL;
+            $str .= '  下载列表: ' . PHP_EOL;
+            foreach ($movie['downloads'] as $download) {
+                $str .= '  ' . $download['title'] . ' ' . $download['url'] . PHP_EOL;
+            }
+            $str .= PHP_EOL;
+        }
+        return $str;
     }
 }
