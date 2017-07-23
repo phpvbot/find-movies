@@ -11,11 +11,13 @@ class FindMovies extends AbstractMessageHandler
 
     public $author = '96qbhy';
 
-    public $name = 'find-movies';
+    public $name = 'find_movies';
 
     public $zhName = '找电影';
 
     public $version = '1.0';
+
+    public $configs = [];
 
     /**
      * 注册拓展时的操作.
@@ -26,6 +28,7 @@ class FindMovies extends AbstractMessageHandler
          * 初始化 Finder
          */
         Finder::init();
+        $this->configs = vbot('config')->get('extension.' . $this->name);
     }
 
     /**
@@ -39,8 +42,8 @@ class FindMovies extends AbstractMessageHandler
         $content = $message['content'];
         if ($message['type'] === 'text' and strpos($content, '找电影 ') === 0 and strlen($content) > 4) {
             $keyword = str_replace("找电影 ", '', $content);
-
-            $results = Finder::find($keyword, 5);
+            $limit = isset($this->configs['limit']) ? $this->configs['limit'] : 5;
+            $results = Finder::find($keyword, $limit);
 
         }
         return null;
