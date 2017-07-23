@@ -18,12 +18,6 @@ class FindMovies extends AbstractMessageHandler
 
     public $version = '1.0';
 
-    public $config = [
-        'limit' => 3,
-        'msg' => '抱歉,没有找到和 "{keyword}" 相关的电影。',
-        'render' => [self::class, 'render']
-    ];
-
 
     /**
      * 注册拓展时的操作.
@@ -34,7 +28,11 @@ class FindMovies extends AbstractMessageHandler
          * 初始化 Finder
          */
         Finder::init();
-        $this->config = vbot()->config->get('extension.' . $this->name, $this->config);
+        $this->config = vbot()->config->get('extension.' . $this->name, [
+            'limit' => 3,
+            'msg' => '抱歉,没有找到和 "{keyword}" 相关的电影。',
+            'render' => [self::class, 'render']
+        ]);
     }
 
     /**
@@ -54,7 +52,7 @@ class FindMovies extends AbstractMessageHandler
             if (count($movies) === 0) {
                 return Text::send($username, str_replace("{keyword}", $keyword, $this->config['msg']));
             }
-            if (is_callable($render = $this->config['render'])) {
+            if (isset($this->config['render']) && is_callable($render = $this->config['render'])) {
                 $str = call_user_func_array($render, [$movies]);
             } else {
                 $str = self::render($movies);
@@ -71,7 +69,7 @@ class FindMovies extends AbstractMessageHandler
             $str .= ($key + 1) . ' ' . $movie['title'] . PHP_EOL;
             $str .= '  下载列表: ' . PHP_EOL;
             foreach ($movie['downloads'] as $download) {
-                $str .= '  ' . $download['title'] . ' ' . $download['url'] . PHP_EOL;
+                $str .= '  《' . $download['title'] . '》 ' . $download['url'] . PHP_EOL;
             }
             $str .= PHP_EOL;
         }
