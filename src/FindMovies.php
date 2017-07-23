@@ -28,11 +28,11 @@ class FindMovies extends AbstractMessageHandler
          * 初始化 Finder
          */
         Finder::init();
-        $this->config = vbot()->config->get('extension.' . $this->name, [
+        $this->config = $this->config ?: [
             'limit' => 3,
             'msg' => '抱歉,没有找到和 "{keyword}" 相关的电影。',
             'render' => [self::class, 'render']
-        ]);
+        ];
     }
 
     /**
