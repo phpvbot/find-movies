@@ -15,7 +15,7 @@
         }
     ],
     "require": {
-        "96qbhy/find-movies": "^1.0"
+        "96qbhy/find-movies": "^1.1"
     },
     "autoload": {
         "psr-4": {
